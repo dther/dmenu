@@ -1,3 +1,12 @@
+# dther's dmenu
+
+Patched dmenu to include the following features:
+    - no indent when using a prompt in vertical mode
+    - center patch to allow rofi-style menus without the bloteTM
+    - mouse support. I have an X220T. Don't judge.
+
+Original README below.
+---
 dmenu - dynamic menu
 ====================
 dmenu is an efficient dynamic menu for X.
