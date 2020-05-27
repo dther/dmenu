@@ -42,7 +42,7 @@ static int lrpad; /* sum of left and right padding */
 static size_t cursor;
 static struct item *items = NULL;
 static struct item *matches, *matchend;
-static struct item *prev, *curr, *next, *sel;
+static struct item *prev, *curr, *next, *sel, *hover;
 static int mon = -1, screen;
 
 static Atom clip, utf8;
@@ -125,7 +125,7 @@ cistrstr(const char *s, const char *sub)
 static int
 drawitem(struct item *item, int x, int y, int w)
 {
-	if (item == sel)
+    if (item == sel && hover == NULL || item == hover)
 		drw_setscheme(drw, scheme[SchemeSel]);
 	else if (item->out)
 		drw_setscheme(drw, scheme[SchemeOut]);
@@ -623,6 +623,46 @@ buttonpress(XEvent *e)
 }
 
 static void
+buttonhover(XEvent *e)
+{
+	struct item *item;
+	XMotionEvent *ev = &e->xmotion;
+	int x = 0, y = 0, h = bh, w;
+
+    if (lines > 0) {
+        /*vertical lists */
+		for (item = curr; item != next; item = item->right) {
+			y += h;
+			if (ev->y >= y && ev->y <= (y + h)) {
+                hover = item;
+                drawmenu();
+                return;
+            }
+        }
+    } else if (matches) {
+        /* horizontal lists */
+		x += inputw;
+		w = TEXTW("<");
+		for (item = curr; item != next; item = item->right) {
+			x += w;
+			w = MIN(TEXTW(item->text), mw - x - TEXTW(">"));
+			if (ev->x >= x && ev->x <= x + w) {
+                hover = item;
+                drawmenu();
+                return;
+            }
+        }
+    }
+}
+
+static void
+buttonhoverclear(void)
+{
+    hover = NULL;
+    drawmenu();
+}
+
+static void
 paste(void)
 {
 	char *p, *q;
@@ -680,6 +720,12 @@ run(void)
 		switch(ev.type) {
         case ButtonPress:
             buttonpress(&ev);
+            break;
+        case MotionNotify:
+            buttonhover(&ev);
+            break;
+        case LeaveNotify:
+            buttonhoverclear();
             break;
 		case DestroyNotify:
 			if (ev.xdestroywindow.window != win)
@@ -798,7 +844,7 @@ setup(void)
 	swa.override_redirect = True;
 	swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
 	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask |
-	                 ButtonPressMask;
+	                 ButtonPressMask | PointerMotionMask | LeaveWindowMask;
 	win = XCreateWindow(dpy, parentwin, x, y, mw, mh, 0,
 	                    CopyFromParent, CopyFromParent, CopyFromParent,
 	                    CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);
