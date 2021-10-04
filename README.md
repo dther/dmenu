@@ -1,9 +1,17 @@
 # dther's dmenu
 
 Patched dmenu to include the following features:
+
  - no indent when using a prompt in vertical mode
  - center patch to allow rofi-style menus without the bloteTM
  - mouse support. I have an X220T. Don't judge.
+
+## TODO
+
+ - add alpha patch so that it works with alpha patched st,
+   apparently this is a weird problem with X in that xembed
+   is finicky about what window it's embedded in.
+   There "should be" a way to fix it but I havent figured it out
 
 Original README below.
 ---
